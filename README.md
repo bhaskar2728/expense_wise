@@ -15,6 +15,21 @@
 
 -----
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="screenshots/IMG_6726.png" width="220" />
+  <img src="screenshots/IMG_6727.png" width="220" />
+  <img src="screenshots/IMG_6728.png" width="220" />
+  <img src="screenshots/IMG_6729.png" width="220" />
+  <img src="screenshots/IMG_6730.png" width="220" />
+  <img src="screenshots/IMG_6731.png" width="220" />
+  <img src="screenshots/IMG_6732.png" width="220" />
+  <img src="screenshots/IMG_6733.png" width="220" />
+  </p>
+
+-----
+
 ## 🏗️ Architecture
 
 This project follows **Clean Architecture** with **MVVM** (Model-View-ViewModel), ensuring a distinct separation of concerns, testability, and scalability.
