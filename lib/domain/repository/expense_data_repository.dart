@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:dart_either/dart_either.dart';
 import 'package:expense_wise/data/enums/expense_category_enum.dart';
 import 'package:expense_wise/data/model/expense_model.dart';
