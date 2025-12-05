@@ -32,7 +32,15 @@ class InputField extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: TextField(
+          child: TextFormField(
+            validator: isAmount ? (value) {
+              if (value == null || value.isEmpty) return 'Enter an amount';
+              if (double.tryParse(value) == null) return 'Invalid number';
+              return null;
+            } : (value) {
+              if (value == null || value.isEmpty) return 'Enter some description';
+              return null;
+            } ,
             controller: controller,
             keyboardType: isAmount
                 ? const TextInputType.numberWithOptions(decimal: true)

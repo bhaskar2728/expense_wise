@@ -11,33 +11,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddOrUpdateExpenseScreen extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
+
   const AddOrUpdateExpenseScreen({super.key, this.expense});
 
   @override
-  ConsumerState<AddOrUpdateExpenseScreen> createState() => _AddExpenseScreenState();
+  ConsumerState<AddOrUpdateExpenseScreen> createState() =>
+      _AddExpenseScreenState();
 }
 
 class _AddExpenseScreenState extends ConsumerState<AddOrUpdateExpenseScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   DateTime selectedDateTime = DateTime.now();
   ExpenseCategory selectedCategory = ExpenseCategory.other;
+
   @override
   void initState() {
-    if(widget.expense != null){
+    if (widget.expense != null) {
       selectedDateTime = widget.expense!.dateTime;
       _titleController.text = widget.expense!.title;
       _amountController.text = widget.expense!.amount.toString();
       selectedCategory = widget.expense!.category;
     }
-    _titleController.addListener(_updateCategoryIcon);
-    WidgetsBinding.instance.addPostFrameCallback(
-        (timestamp){
-          ref.read(addExpenseViewModelProvider.notifier).updateCategory(selectedCategory);
-          ref.read(addExpenseViewModelProvider.notifier).updateDate(selectedDateTime);
-        }
+    _titleController.addListener(
+      () => ref
+          .read(addExpenseViewModelProvider.notifier)
+          .predictCategoryBasedOnText(_titleController.text.toLowerCase()),
     );
+    WidgetsBinding.instance.addPostFrameCallback((timestamp) {
+      ref
+          .read(addExpenseViewModelProvider.notifier)
+          .updateCategory(selectedCategory);
+      ref
+          .read(addExpenseViewModelProvider.notifier)
+          .updateDate(selectedDateTime);
+    });
     super.initState();
   }
 
@@ -58,14 +68,7 @@ class _AddExpenseScreenState extends ConsumerState<AddOrUpdateExpenseScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => widget.expense == null ? viewModel.addExpense(
-              title: _titleController.text,
-              amount: double.parse(_amountController.text),
-            ) : viewModel.updateExpense(
-              id: widget.expense!.id!,
-              title: _titleController.text,
-              amount: double.parse(_amountController.text),
-            ),
+            onPressed: onSave,
             child: const Text(
               'Save',
               style: TextStyle(
@@ -83,61 +86,54 @@ class _AddExpenseScreenState extends ConsumerState<AddOrUpdateExpenseScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  InputField(
-                    controller: _titleController,
-                    icon: CategoryHelper.getIcon(ref.watch(addExpenseViewModelProvider).expenseCategory),
-                    color: CategoryHelper.getColor(ref.watch(addExpenseViewModelProvider).expenseCategory),
-                    hintText: 'Enter a description',
-                    isAmount: false,
-                  ),
-                  const SizedBox(height: 20),
-                  InputField(
-                    controller: _amountController,
-                    icon: Icons.currency_rupee,
-                    hintText: '0.00',
-                    isAmount: true,
-                  ),
-                  // Removed "Paid by you and split equally" row
-                ],
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    InputField(
+                      controller: _titleController,
+                      icon: CategoryHelper.getIcon(
+                        ref.watch(addExpenseViewModelProvider).expenseCategory,
+                      ),
+                      color: CategoryHelper.getColor(
+                        ref.watch(addExpenseViewModelProvider).expenseCategory,
+                      ),
+                      hintText: 'Enter a description',
+                      isAmount: false,
+                    ),
+                    const SizedBox(height: 20),
+                    InputField(
+                      controller: _amountController,
+                      icon: Icons.currency_rupee,
+                      hintText: '0.00',
+                      isAmount: true,
+                    ),
+                    // Removed "Paid by you and split equally" row
+                  ],
+                ),
               ),
             ),
           ),
-          BottomOptionsWidget(expense: widget.expense,),
+          BottomOptionsWidget(expense: widget.expense),
         ],
       ),
     );
   }
 
-  void _updateCategoryIcon() {
-    final text = _titleController.text.toLowerCase();
-    ExpenseCategory newCategory = ExpenseCategory.other; // Default 'Other'
+  void onSave() {
+    final viewModel = ref.read(addExpenseViewModelProvider.notifier);
+    if (!_formKey.currentState!.validate()) return;
 
-    // Logic to detect category from text
-    if (_containsAny(text, ['food', 'lunch', 'dinner', 'breakfast', 'meal', 'restaurant', 'cafe', 'coffee', 'burger', 'pizza', 'groceries', 'snack'])) {
-      newCategory = ExpenseCategory.food; // Food
-    } else if (_containsAny(text, ['transport', 'uber', 'cab', 'taxi', 'bus', 'train', 'flight', 'fuel', 'petrol', 'gas', 'parking', 'travel'])) {
-      newCategory = ExpenseCategory.transport;// Transport
-    } else if (_containsAny(text, ['shopping', 'clothes', 'shoes', 'amazon', 'flipkart', 'market', 'mall', 'buy'])) {
-      newCategory = ExpenseCategory.shopping;// Shopping
-    } else if (_containsAny(text, ['entertainment', 'movie', 'cinema', 'film', 'netflix', 'game', 'party', 'concert', 'fun'])) {
-      newCategory = ExpenseCategory.entertainment; // Entertainment (Using Movie icon as proxy)
-    } else if (_containsAny(text, ['health', 'doctor', 'medicine', 'pharmacy', 'hospital', 'gym', 'workout', 'meds'])) {
-      newCategory = ExpenseCategory.health;// Health
-    }
-
-    if (newCategory != selectedCategory) {
-      selectedCategory = newCategory;
-      ref.read(addExpenseViewModelProvider.notifier).updateCategory(newCategory);
-    }
-  }
-
-  bool _containsAny(String text, List<String> keywords) {
-    for (final keyword in keywords) {
-      if (text.contains(keyword)) return true;
-    }
-    return false;
+    widget.expense == null
+        ? viewModel.addExpense(
+            title: _titleController.text,
+            amount: double.parse(_amountController.text),
+          )
+        : viewModel.updateExpense(
+            id: widget.expense!.id!,
+            title: _titleController.text,
+            amount: double.parse(_amountController.text),
+          );
   }
 }

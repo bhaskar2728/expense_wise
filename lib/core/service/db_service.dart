@@ -31,7 +31,9 @@ class DBService{
 
   Future<List<Map<String,dynamic>>> getAllExpenses() async{
     final db = await getDB();
-    List<Map<String,dynamic>> data = await db.query(Constants.tableName);
+    List<Map<String,dynamic>> data = await db.query(
+        Constants.tableName,
+      orderBy: "${Constants.dateTime} DESC",);
     return data;
   }
 

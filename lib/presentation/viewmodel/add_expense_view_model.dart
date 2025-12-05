@@ -101,6 +101,88 @@ class AddExpenseViewModel extends StateNotifier<AddExpenseState> {
   void updateCategory(ExpenseCategory category) {
     state = state.copyWith(category: category);
   }
+
+  void predictCategoryBasedOnText(String text) {
+    ExpenseCategory newCategory = ExpenseCategory.other; // Default 'Other'
+
+    // Logic to detect category from text
+    if (_containsAny(text, [
+      'food',
+      'lunch',
+      'dinner',
+      'breakfast',
+      'meal',
+      'restaurant',
+      'cafe',
+      'coffee',
+      'burger',
+      'pizza',
+      'groceries',
+      'snack',
+    ])) {
+      newCategory = ExpenseCategory.food; // Food
+    } else if (_containsAny(text, [
+      'transport',
+      'uber',
+      'cab',
+      'taxi',
+      'bus',
+      'train',
+      'flight',
+      'fuel',
+      'petrol',
+      'gas',
+      'parking',
+      'travel',
+    ])) {
+      newCategory = ExpenseCategory.transport; // Transport
+    } else if (_containsAny(text, [
+      'shopping',
+      'clothes',
+      'shoes',
+      'amazon',
+      'flipkart',
+      'market',
+      'mall',
+      'buy',
+    ])) {
+      newCategory = ExpenseCategory.shopping; // Shopping
+    } else if (_containsAny(text, [
+      'entertainment',
+      'movie',
+      'cinema',
+      'film',
+      'netflix',
+      'game',
+      'party',
+      'concert',
+      'fun',
+    ])) {
+      newCategory = ExpenseCategory
+          .entertainment; // Entertainment (Using Movie icon as proxy)
+    } else if (_containsAny(text, [
+      'health',
+      'doctor',
+      'medicine',
+      'pharmacy',
+      'hospital',
+      'gym',
+      'workout',
+      'meds',
+    ])) {
+      newCategory = ExpenseCategory.health; // Health
+    }
+    if (newCategory != state.expenseCategory) {
+      updateCategory(newCategory);
+    }
+  }
+
+  bool _containsAny(String text, List<String> keywords) {
+    for (final keyword in keywords) {
+      if (text.contains(keyword)) return true;
+    }
+    return false;
+  }
 }
 
 final addExpenseViewModelProvider = StateNotifierProvider(
